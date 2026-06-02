@@ -16,7 +16,7 @@ const GradientFallback = React.memo(({ text }: { text: string }) => {
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={svg} alt={text} className="h-full w-full object-contain object-center" loading="lazy" decoding="async" />
+    <img src={svg} alt={text} className="h-full w-full object-cover" />
   );
 });
 
@@ -29,7 +29,7 @@ const ProductImageComponent = React.memo(function ProductImage({ src, alt, class
   // Use native img for external urls to avoid Next/Image domain config issues in local dev
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt || 'product'} className={`h-full w-full object-contain object-center ${className || ''}`} loading="lazy" decoding="async" />
+    <img src={src} alt={alt || 'product'} className={`h-full w-full object-cover ${className || ''}`} />
   );
 });
 

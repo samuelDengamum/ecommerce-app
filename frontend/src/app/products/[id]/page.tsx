@@ -1,8 +1,9 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import ProductPurchasePanel from '../../components/ProductPurchasePanel';
+'use client';
 
-export const revalidate = 300;
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { addToCart } from '@/lib/cart';
 
 interface Product {
   _id: string;
@@ -14,50 +15,92 @@ interface Product {
   category: string;
 }
 
-async function fetchProduct(id: string): Promise<Product | null> {
-  try {
-    const response = await fetch(`http://127.0.0.1:5000/api/products/${id}`, {
-      next: { revalidate: 300 },
-    });
+export default function ProductDetailsPage() {
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const params = useParams();
+  const id = params?.id as string | undefined;
 
-    if (!response.ok) {
-      return null;
-    }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
 
-    return (await response.json()) as Product;
-  } catch (error) {
-    console.error('Failed to fetch product:', error);
-    return null;
+      try {
+        const res = await fetch(`http://localhost:5000/api/products/${id}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Product not found');
+        const data = await res.json();
+        setProduct(data);
+      } catch (err) {
+        console.error('Failed to fetch product:', err);
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!id) return;
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/related/${id}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Failed to load related products');
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setRelatedProducts(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch related products:', err);
+        setRelatedProducts([]);
+      }
+    };
+
+    fetchRelatedProducts();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <p className="text-slate-300">Loading product details...</p>
+      </div>
+    );
   }
-}
-
-async function fetchRelatedProducts(id: string): Promise<Product[]> {
-  try {
-    const response = await fetch(`http://127.0.0.1:5000/api/products/related/${id}`, {
-      next: { revalidate: 300 },
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const data = (await response.json()) as Product[];
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error('Failed to fetch related products:', error);
-    return [];
-  }
-}
-
-export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const product = await fetchProduct(id);
 
   if (!product) {
-    notFound();
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-6 text-center">
+        <p className="text-slate-300 mb-4">Product not found</p>
+        <Link href="/products" className="text-blue-400 hover:text-blue-300">
+          Back to Products
+        </Link>
+      </div>
+    );
   }
 
-  const relatedProducts = await fetchRelatedProducts(id);
+  const handleAddToCart = () => {
+    addToCart(
+      {
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        maxStock: product.stock,
+      },
+      quantity
+    );
+
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -72,17 +115,15 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
       <div className="container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur">
-            {product.image ? (
+            {product?.image ? (
               <img
                 src={product.image}
                 alt={product.name || 'product'}
-                className="h-full min-h-[420px] w-full object-contain object-center"
-                loading="eager"
-                decoding="async"
+                className="h-full min-h-[420px] w-full object-cover"
               />
             ) : (
               <div className="flex min-h-[420px] items-center justify-center text-9xl text-slate-300">
-                {product.name?.charAt(0) || 'P'}
+                {product?.name?.charAt(0) || 'P'}
               </div>
             )}
           </div>
@@ -122,7 +163,28 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
               </div>
             </div>
 
-            <ProductPurchasePanel product={product} />
+            {product.stock > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-semibold text-slate-300">Quantity:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={product.stock}
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-24 rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  Add to Cart
+                </button>
+                {added && <p className="text-sm text-emerald-300">Added to cart successfully.</p>}
+              </div>
+            )}
           </div>
         </div>
 
@@ -138,9 +200,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                         <img
                           src={relatedProduct.image}
                           alt={relatedProduct.name}
-                          className="h-full w-full object-contain object-center transition-transform duration-300 hover:scale-110"
+                          className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
                           loading="lazy"
-                          decoding="async"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-4xl text-slate-400">
