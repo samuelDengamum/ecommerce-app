@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { addToCart } from '@/lib/cart';
 
@@ -22,6 +22,7 @@ export default function ProductDetailsPage() {
   const [added, setAdded] = useState(false);
   const [loading, setLoading] = useState(true);
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string | undefined;
 
   useEffect(() => {
@@ -102,6 +103,11 @@ export default function ProductDetailsPage() {
     setTimeout(() => setAdded(false), 1800);
   };
 
+  const handleBuyNow = () => {
+    handleAddToCart();
+    router.push('/cart');
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="border-b border-white/10 bg-white/5 backdrop-blur">
@@ -176,12 +182,20 @@ export default function ProductDetailsPage() {
                     className="w-24 rounded-lg border border-white/10 bg-slate-900 px-4 py-2 text-white focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  Add to Cart
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 rounded-lg border-2 border-blue-600 bg-transparent py-4 text-lg font-bold text-blue-400 transition-all duration-300 hover:bg-blue-600/10"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    Buy Now
+                  </button>
+                </div>
                 {added && <p className="text-sm text-emerald-300">Added to cart successfully.</p>}
               </div>
             )}
