@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <defs>
+    <linearGradient id="g7" x1="0" x2="1">
+      <stop offset="0" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#f472b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g7)"/>
+  <g fill="#fff" font-family="sans-serif" font-weight="700" font-size="48" text-anchor="middle">
+    <text x="50%" y="55%">Portable Speaker</text>
+    <text x="50%" y="62%" font-size="28">Loud</text>
+  </g>
+</svg>
