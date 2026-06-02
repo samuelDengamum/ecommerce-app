@@ -191,7 +191,7 @@ export default function ProductDetailsPage() {
                   </button>
                   <button
                     onClick={handleBuyNow}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-blue-700 hover:to-indigo-700"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 py-4 text-lg font-bold text-white transition-all duration-300 hover:from-green-600 hover:to-emerald-700"
                   >
                     Buy Now
                   </button>
